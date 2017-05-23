@@ -62,10 +62,13 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
     private int mVol;
     private float touchX;
 
-    private boolean isNetUri;
+    private boolean isNetUri = true;
     private LinearLayout ll_buffering;
     private TextView tv_net_speed;
     private int preCurrentPosition;
+    private static final int SHOW_NET_SPEED = 2;
+    private LinearLayout ll_loading;
+    private TextView tv_loading_net_speed;
 
     private LinearLayout llTop;
     private TextView tvName;
@@ -111,6 +114,8 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         vv_video = (com.atguigu.tiankuo.videoplayer.utils.VideoView) findViewById(R.id.vv_video);
         ll_buffering = (LinearLayout) findViewById(R.id.ll_buffering);
         tv_net_speed = (TextView) findViewById(R.id.tv_net_speed);
+        ll_loading = (LinearLayout) findViewById(R.id.ll_loading);
+        tv_loading_net_speed = (TextView) findViewById(R.id.tv_loading_net_speed);
 
 
         btnVoice.setOnClickListener(this);
@@ -123,6 +128,8 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
 
         seekbarVoice.setMax(maxVoice);
         seekbarVoice.setProgress(currentVoice);
+
+        handler.sendEmptyMessage(SHOW_NET_SPEED);
     }
 
 
@@ -214,6 +221,14 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
+                case SHOW_NET_SPEED:
+                    if (isNetUri) {
+                        String netSpeed = utils.getNetSpeed(SystemVideoPlayerActivity.this);
+                        tv_loading_net_speed.setText("正在加载中...." + netSpeed);
+                        tv_net_speed.setText("正在缓冲...." + netSpeed);
+                        sendEmptyMessageDelayed(SHOW_NET_SPEED, 1000);
+                    }
+                    break;
                 case PROGRESS:
                     int currentPosition = vv_video.getCurrentPosition();
                     seekbarVideo.setProgress(currentPosition);
@@ -222,7 +237,7 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
 
                     if (isNetUri) {
                         int bufferPercentage = vv_video.getBufferPercentage();//0~100;
-                        int totalBuffer = bufferPercentage*seekbarVideo.getMax();
+                        int totalBuffer = bufferPercentage * seekbarVideo.getMax();
                         int secondaryProgress = totalBuffer / 100;
                         seekbarVideo.setSecondaryProgress(secondaryProgress);
                     } else {
@@ -448,6 +463,7 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
                 tvDuration.setText(utils.stringForTime(duration));
                 vv_video.start();
                 handler.sendEmptyMessage(PROGRESS);
+                ll_loading.setVisibility(View.GONE);
                 hideMediaController();
 
                 setVideoType(DEFUALT_SCREEN);
@@ -571,7 +587,8 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         position--;
         if (position > 0) {
             MediaItem mediaItem = mediaItems.get(position);
-            isNetUri =  utils.isNetUri(mediaItem.getData());
+            isNetUri = utils.isNetUri(mediaItem.getData());
+            ll_loading.setVisibility(View.VISIBLE);
             vv_video.setVideoPath(mediaItem.getData());
             tvName.setText(mediaItem.getName());
             setButtonStatus();
@@ -582,7 +599,8 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         position++;
         if (position < mediaItems.size()) {
             MediaItem mediaItem = mediaItems.get(position);
-            isNetUri =  utils.isNetUri(mediaItem.getData());
+            isNetUri = utils.isNetUri(mediaItem.getData());
+            ll_loading.setVisibility(View.VISIBLE);
             vv_video.setVideoPath(mediaItem.getData());
             tvName.setText(mediaItem.getName());
             setButtonStatus();
