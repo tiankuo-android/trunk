@@ -53,17 +53,19 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
     private int videoHeight;
 
     private int currentVoice;
-    private int currentVoice1;
     private AudioManager am;
-    private WindowManager wm;
     private int maxVoice;
     private boolean isMute = false;
 
     private float startY;
-    private float startY1;
     private float touchRang;
     private int mVol;
     private float touchX;
+
+    private boolean isNetUri;
+    private LinearLayout ll_buffering;
+    private TextView tv_net_speed;
+    private int preCurrentPosition;
 
     private LinearLayout llTop;
     private TextView tvName;
@@ -81,7 +83,6 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
     private Button btnStartPause;
     private Button btnNext;
     private Button btnSwitchScreen;
-    private int videoType;
 
     /**
      * Find the Views in the layout<br />
@@ -108,6 +109,8 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         btnNext = (Button) findViewById(R.id.btn_next);
         btnSwitchScreen = (Button) findViewById(R.id.btn_switch_screen);
         vv_video = (com.atguigu.tiankuo.videoplayer.utils.VideoView) findViewById(R.id.vv_video);
+        ll_buffering = (LinearLayout) findViewById(R.id.ll_buffering);
+        tv_net_speed = (TextView) findViewById(R.id.tv_net_speed);
 
 
         btnVoice.setOnClickListener(this);
@@ -216,6 +219,28 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
                     seekbarVideo.setProgress(currentPosition);
                     tvCurrentTime.setText(utils.stringForTime(currentPosition));
                     tvSystemTime.setText(getSystemTime());
+
+                    if (isNetUri) {
+                        int bufferPercentage = vv_video.getBufferPercentage();//0~100;
+                        int totalBuffer = bufferPercentage*seekbarVideo.getMax();
+                        int secondaryProgress = totalBuffer / 100;
+                        seekbarVideo.setSecondaryProgress(secondaryProgress);
+                    } else {
+                        seekbarVideo.setSecondaryProgress(0);
+                    }
+                    if (isNetUri && vv_video.isPlaying()) {
+
+                        int duration = currentPosition - preCurrentPosition;
+                        if (duration < 500) {
+                            //卡
+                            ll_buffering.setVisibility(View.VISIBLE);
+                        } else {
+                            //不卡
+                            ll_buffering.setVisibility(View.GONE);
+                        }
+                        preCurrentPosition = currentPosition;
+                    }
+
                     sendEmptyMessageDelayed(PROGRESS, 1000);
                     break;
                 case HIDE_MEDIACONTROLLER:
@@ -248,6 +273,7 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
             tvName.setText(mediaItem.getName());
 
             vv_video.setVideoPath(mediaItem.getData());
+            isNetUri =  utils.isNetUri(uri.toString());
         } else if (uri != null) {
             vv_video.setVideoURI(uri);
         }
@@ -543,6 +569,7 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         position--;
         if (position > 0) {
             MediaItem mediaItem = mediaItems.get(position);
+            isNetUri =  utils.isNetUri(mediaItem.getData());
             vv_video.setVideoPath(mediaItem.getData());
             tvName.setText(mediaItem.getName());
             setButtonStatus();
@@ -553,6 +580,7 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
         position++;
         if (position < mediaItems.size()) {
             MediaItem mediaItem = mediaItems.get(position);
+            isNetUri =  utils.isNetUri(mediaItem.getData());
             vv_video.setVideoPath(mediaItem.getData());
             tvName.setText(mediaItem.getName());
             setButtonStatus();
