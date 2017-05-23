@@ -170,18 +170,18 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
     }
 
     private void switchPlayer() {
-                new AlertDialog.Builder(this)
-                                    .setTitle("提示")
-                                   .setMessage("当前使用系统播放器播放，当播放有声音没有画面，请切换到万能播放器播放")
-                                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                                   @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                            startVitamioPlayer();
-                                        }
-                                })
-                                  .setNegativeButton("取消", null)
-                                    .show();
-           }
+        new AlertDialog.Builder(this)
+                .setTitle("提示")
+                .setMessage("当前使用系统播放器播放，当播放有声音没有画面，请切换到万能播放器播放")
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startVitamioPlayer();
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
 
 
     public void setVideoType(int videoType) {
@@ -465,6 +465,13 @@ public class SystemVideoPlayerActivity extends AppCompatActivity implements View
 
             }
         });
+
+        if (vv_video.isPlaying()) {
+            btnStartPause.setBackgroundResource(R.drawable.btn_pause_selector);
+        } else {
+            btnStartPause.setBackgroundResource(R.drawable.btn_start_selector);
+        }
+
         vv_video.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
